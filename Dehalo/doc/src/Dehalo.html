@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<!--
+   Source of the Dehalo documentation. Do not edit doc/scripts/Dehalo/Dehalo.html by hand.
+   Math: $$...$$ = numbered display equation, $...$ = inline. LaTeX syntax, converted to MathML by
+   doc/build_doc.py. Build:  uv run --with latex2mathml doc/build_doc.py
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+   <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+   <title>PixInsight Reference Documentation | Dehalo</title>
+   <meta name="keywords" content="halo, bright star, reflection, gradient, IFN, tidal tail, linear" />
+   <meta name="author" content="Michal Wierzbinski" />
+   <meta name="description" content="Models wide halos of bright stars and subtracts them from linear images." />
+   <meta name="robots" content="INDEX,FOLLOW" />
+   <meta name="pidoc-document-class" content="PIScriptDoc" />
+   <script type="text/javascript" src="../../pidoc/scripts/pidoc-utility.js"></script>
+   <link type="text/css" href="../../pidoc/css/pidoc-common.css" rel="stylesheet" />
+   <link type="text/css" href="../../pidoc/css/pidoc-highlight.css" rel="stylesheet" />
+   <link type="text/css" href="../../pidoc/css/pidoc-tool.css" rel="stylesheet" />
+   <link rel="icon" href="../../pidoc/icons/pidoc-icon.svg" />
+   <style type="text/css">
+      math { font-family: "DejaVu Math TeX Gyre", "Latin Modern Math", "STIX Two Math", "Noto Sans Math", serif; font-size: 1.05em; }
+      .pidoc_equation { margin: 0.9em 0; overflow: visible; }
+      .pidoc_equation math { display: inline-block; }
+      .pidoc_equation_number { color: #666; padding-left: 1em; }
+      pre.dehalo_algo { background: #f6f6f6; border: 1px solid #ddd; padding: 0.6em 1em; font-size: 0.95em; }
+      table.dehalo_symbols td, table.dehalo_symbols th { padding: 0.2em 0.8em; text-align: left; vertical-align: top; }
+   </style>
+</head>
+<body>
+<script type="text/javascript">
+   pidoc_generateDynamicContents();
+</script>
+
+<h1>Dehalo</h1>
+
+<hr class="separator"/>
+
+<div id="brief">
+<p>Models the wide, faint halos of bright stars and subtracts them from linear images. It keeps a natural halo
+near each star and removes the wings on the outskirts, where they cover galaxies, tidal tails and IFN.
+<a href="#__contents__">[more]</a></p></div>
+
+<div id="keywords">
+<p><strong>Keywords:</strong> halo, bright star, linear, point spread function, IFN, tidal tail, background</p>
+</div>
+
+<h3 class="pidoc_sectionTitle" id="__toc__">Contents</h3>
+<p class="pidoc_sectionToggleButton" onclick="pidoc_toggleSection( 'toc', this );">[hide]</p>
+<div id="toc">
+<ul>
+<li class="pidoc_tocItem"><a href="#__Introduction__">1&emsp;Introduction</a></li>
+<li class="pidoc_tocItem"><a href="#__Workflow__">2&emsp;Workflow</a></li>
+<li class="pidoc_tocItem"><a href="#__Parameters__">3&emsp;Parameters</a>
+<ul>
+<li class="pidoc_tocSubitem"><a href="#__parameter001__">3.1&emsp;Images</a></li>
+<li class="pidoc_tocSubitem"><a href="#__parameter002__">3.2&emsp;Halo stars</a></li>
+<li class="pidoc_tocSubitem"><a href="#__parameter003__">3.3&emsp;Model</a></li>
+<li class="pidoc_tocSubitem"><a href="#__parameter004__">3.4&emsp;Reduction</a></li>
+<li class="pidoc_tocSubitem"><a href="#__parameter005__">3.5&emsp;Apply options</a></li>
+</ul>
+</li>
+<li class="pidoc_tocItem"><a href="#__Preview__">4&emsp;Preview</a></li>
+<li class="pidoc_tocItem"><a href="#__Buttons__">5&emsp;Buttons</a></li>
+<li class="pidoc_tocItem"><a href="#__Theory__">6&emsp;Theory and algorithm</a>
+<ul>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Physics__">6.1&emsp;Physical background</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Model__">6.2&emsp;Image model</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Binning__">6.3&emsp;Binning</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Detection__">6.4&emsp;Star detection</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Geometry__">6.5&emsp;Star geometry</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Exclusion__">6.6&emsp;Exclusion map</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Profile__">6.7&emsp;Azimuthal profile</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Tail__">6.8&emsp;Local sky offset and tail fit</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Smoothing__">6.9&emsp;Smoothing and noise radius</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Halo__">6.10&emsp;Halo model</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Joint__">6.11&emsp;Joint fit of all stars</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Plane__">6.12&emsp;Sky plane</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Reduction__">6.13&emsp;Reduction weight and output</a></li>
+<li class="pidoc_tocSubitem"><a href="#__Theory_:_Symbols__">6.14&emsp;Symbols and parameters</a></li>
+</ul>
+</li>
+<li class="pidoc_tocItem"><a href="#__Limits__">7&emsp;Limits</a></li>
+<li class="pidoc_tocItem"><a href="#__References__">8&emsp;References</a></li>
+<li class="pidoc_tocItem"><a href="#__History__">9&emsp;Version history</a></li>
+</ul>
+</div>
+
+<div id="__contents__">
+
+<div class="pidoc_section" id="__Introduction__">
+   <h3 class="pidoc_sectionTitle">1&emsp;Introduction</h3>
+   <p class="pidoc_sectionToggleButton" onclick="pidoc_toggleSection( 'Introduction', this );">[hide]</p>
+   <div id="Introduction">
+<p>A bright star makes a wide halo. The light of a star does not stop at the core of the star image: the point
+spread function (PSF) has wide wings. They come from light that is scattered by dust and by small surface errors on
+the mirrors, lenses and filters, from diffraction, from internal reflections, and from scattering in the atmosphere
+(the aureole).</p>
+<p>Thin clouds or haze can also make halos larger and add a wide glow around bright stars: the water droplets and
+ice crystals scatter the starlight, and when many subframes taken through thin clouds are stacked, this scattered
+light adds up in the master like a real part of the halo.</p>
+<p>The halo can extend over thousands of pixels. It covers faint structures such as tidal tails, stellar streams and integrated flux nebula (IFN). Gradient
+tools do not remove it well, because the halo is a steep radial structure and not a smooth gradient.</p>
+<p>Dehalo measures the azimuthal profile of each halo star, makes a smooth model of the halo, and subtracts
+a part of this model. The part that is subtracted changes with the distance from the star: near the star a small part
+is removed, so the star keeps a natural halo; far from the star all of the halo is removed.</p>
+<p><b>Use the script on linear data only</b>, before gradient removal, deconvolution and the stretch. The halo
+is additive only in linear data. The halo is not the same in different filters, so use the script on each master (L, R,
+G, B) or on a linear RGB image, where each channel gets its own model.</p>
+<p>Section <a href="#__Theory__">6</a> gives the full model, the algorithms and the formulas.</p>
+   </div>
+</div>
+
+<div class="pidoc_section" id="__Workflow__">
+   <h3 class="pidoc_sectionTitle">2&emsp;Workflow</h3>
+   <p class="pidoc_sectionToggleButton" onclick="pidoc_toggleSection( 'Workflow', this );">[hide]</p>
+   <div id="Workflow">
+<ol>
+<li>Open a linear image and make it the active window. Start the script.</li>
+<li>The script reads the image, finds the stars with a saturated core and fits their halos. You do not have to
+click a button. Each change of the image, the mask, the detection or the model settings starts a new fit after
+a short pause. The last result stays on the screen until the new one is ready.</li>
+<li>Optional: select an exclusion mask for the galaxy, tidal tails and IFN, so that these structures do not go
+into the halo model.</li>
+<li>Look at the star table. Untick the stars whose halo you want to keep. Remove false detections. Add missing
+stars with Shift+click in the preview.</li>
+<li>Set the reduction sliders. The preview shows the result immediately. Use Ctrl+click to compare before and
+after, and the hard stretch to see the faint halo and IFN.</li>
+<li>Click <b>Apply</b>.</li>
+</ol>
+   </div>
+</div>
+
+<div class="pidoc_section" id="__Parameters__">
+   <h3 class="pidoc_sectionTitle">3&emsp;Parameters</h3>
+   <p class="pidoc_sectionToggleButton" onclick="pidoc_toggleSection( 'Parameters', this );">[hide]</p>
+   <div id="Parameters">
+<p>The symbol after a parameter name is the symbol used in section <a href="#__Theory__">6</a>.</p>
+      <div id="__parameter001__">
+<div class="pidoc_parameter">
+   <h4 class="pidoc_parameterTitle">3.1&emsp;Images</h4>
+<p><b>Target (linear):</b> the image to process. A grayscale or an RGB image. Each channel of an RGB image gets
+its own model.</p>
+<p><b>Exclusion mask:</b> optional. Pixels where the mask is above 0.5 are not used for the fit: galaxy, tidal
+tails, streams, IFN. The mask is used only for the fit. The halo model is subtracted from all pixels.</p>
+<p><b>Invert:</b> use this for protection masks, where the structure is black. The script refuses a mask that
+excludes more than 80% of the image, because this is usually an inverted mask.</p>
+</div>
+      </div>
+      <div id="__parameter002__">
+<div class="pidoc_parameter">
+   <h4 class="pidoc_parameterTitle">3.2&emsp;Halo stars</h4>
+<p><b>Binning</b> ($B$): binning factor for the fit and the preview. The result is always calculated at full
+resolution.</p>
+<p><b>Saturation</b> ($t_{\mathrm{sat}}$): pixels at or above this value make a saturated core.</p>
+<p><b>Min core r</b> ($r_{\min}$): the smallest saturated core radius (px) that counts as a halo star. Use a lower
+value if a halo star is missing. RGB masters usually saturate less than L.</p>
+<p><b>Max stars</b> ($N_{\max}$): the largest number of detected stars, largest cores first.</p>
+<p><b>Star table:</b> one row for each star: position, core radius $r_{\mathrm{core}}$, fit radius
+$r_{\mathrm{fit}}$, tail slope $a_t$ and the noise radius $r_{\mathrm{cut}}$, where the profile goes into the noise.
+Manual stars have <i>(m)</i> after the core radius, edited detected stars <i>(e)</i>.</p>
+<ul>
+<li><b>Untick</b> a star to keep its halo in the image. The star stays in the fit, so the models of the other
+stars still include its light.</li>
+<li><b>Remove selected rows</b> removes the selected stars from the model. Use it for false detections or wrong
+manual stars. Select rows with click, Ctrl+click or Shift+click in the table.</li>
+<li><b>Shift+click core r:</b> the core radius given to a star that you add with Shift+click in the preview. It
+sets the size scale of the star.</li>
+</ul>
+</div>
+      </div>
+      <div id="__parameter003__">
+<div class="pidoc_parameter">
+   <h4 class="pidoc_parameterTitle">3.3&emsp;Model</h4>
+<p><b>Approach:</b></p>
+<ul>
+<li><b>Empirical profile + power-law tail</b> (default): the measured azimuthal profile, smoothed. It follows
+rings and bumps of the halo. Beyond the radius where the profile goes into the noise, the model continues as a
+power law.</li>
+<li><b>Smooth power law (outskirts):</b> one $A r^{-a}$ curve fitted on the outskirts. It is never
+above the measured profile. It is the smoothest model and it removes less near the star.</li>
+</ul>
+<p><b>Fit inner radius (x core)</b> ($f_{\mathrm{in}}$): the profile is measured from this multiple of the core
+radius.</p>
+<p><b>Max halo radius (px)</b> ($R_{\max}$): the halo radius of the brightest star. The radius of the other stars
+is scaled by their core radius. Beyond this radius the model decreases to zero over a further 50%.</p>
+<p><b>Profile smoothing</b> ($\lambda$): width of the window in log radius for the local power-law fit that
+smooths the profile (section <a href="#__Theory_:_Smoothing__">6.9</a>).</p>
+<p><b>Iterations</b> ($N_{\mathrm{it}}$): number of joint fit iterations of all stars and the sky plane.</p>
+</div>
+      </div>
+      <div id="__parameter004__">
+<div class="pidoc_parameter">
+   <h4 class="pidoc_parameterTitle">3.4&emsp;Reduction</h4>
+<p>These settings do not start a new fit. The preview changes immediately.</p>
+<p><b>Outer reduction</b> ($\alpha_{\mathrm{out}}$): the part of the halo that is removed far from the star. 1
+removes all of the model.</p>
+<p><b>Inner reduction</b> ($\alpha_{\mathrm{in}}$): the part of the halo that is removed near the star. Low values
+keep more natural halo.</p>
+<p><b>Core protection (&times; core r)</b> ($c$, default 0): no subtraction inside $c\,r_{\mathrm{core}}$. The
+reduction increases smoothly to the full value at $2c\,r_{\mathrm{core}}$. The star core and the edge of the star
+stay as in the original image, so the star has no step or dark ring around it. 0 switches the protection off. The
+protection is off by default: set it together with the opacity, and start low, because a large zone leaves a bright
+glow around small stars.</p>
+<p><b>Core protection opacity</b> ($p$, default 0): how much of the core zone is protected. 1: nothing is
+subtracted inside $c\,r_{\mathrm{core}}$. Lower values also subtract a part of the halo in the zone, so a large
+protection radius does not leave a bright glow that ends abruptly around small stars. Values from 0.3 to 0.7 give a
+weaker glow that fades out. Near 0 the edge of the star becomes hard, because the model is constant inside the first
+measured ring (section <a href="#__Theory_:_Reduction__">6.13</a>).</p>
+<p><b>Protect radius / Transition width (px)</b> ($R_p$, $R_t$): the reduction changes smoothly from the inner
+value to the outer value between <i>protect</i> and <i>protect + transition</i>. The values are for the brightest
+star. In the preview, the yellow circle shows the protect radius and the green circle shows where the full outer
+reduction starts.</p>
+<p><b>Scale radii with star brightness:</b> scales the protect radius and the transition width of each star with
+its core radius ($\rho_s = \kappa_s$, else $\rho_s = 1$). The extent of the halo is approximately proportional to
+the core radius (section <a href="#__Theory_:_Geometry__">6.5</a>).</p>
+</div>
+      </div>
+      <div id="__parameter005__">
+<div class="pidoc_parameter">
+   <h4 class="pidoc_parameterTitle">3.5&emsp;Apply options</h4>
+<p><b>Replace target image</b> (default on): Apply writes the result into the target. The target gets one
+<i>Dehalo</i> (Script) entry in its history, and Undo restores the original image. Negative values are set to 0.
+After the replace, the script reads the target again and makes a new fit. A second Apply removes only the halo that
+is left.</p>
+<p>The history entry contains all the parameters of the run: the dialog settings, the star list (position, core
+radius, ticked or not), the exclusion mask and the options. The History Explorer shows them. Drag the entry to the
+workspace to make a process icon, or onto an image to run Dehalo again with the same parameters and stars, without
+the dialog. For example, use the result on L for the R, G and B masters of the same field. The exclusion mask must be
+open with the same identifier.</p>
+<p>When this option is off, Apply makes a new image <i>&lt;id&gt;_dehalo</i>. The target does not change. The new
+image gets the FITS keywords and the astrometric solution of the target.</p>
+<p><b>Also create halo model image:</b> Apply also makes <i>&lt;id&gt;_halomodel</i>, the part of the halo that was
+subtracted.</p>
+</div>
+      </div>
+   </div>
+</div>
+
+<div class="pidoc_section" id="__Preview__">
+   <h3 class="pidoc_sectionTitle">4&emsp;Preview</h3>
+   <p class="pidoc_sectionToggleButton" onclick="pidoc_toggleSection( 'Preview', this );">[hide]</p>
+   <div id="Preview">
+<table class="pidoc_table">
+<tr><th>Action</th><th>Result</th></tr>
+<tr><td>Ctrl+click</td><td>Switch between Before and After.</td></tr>
+<tr><td>Shift+click</td><td>Add a halo star at this position. The new star is selected.</td></tr>
+<tr><td>Space, Shift+Space</td><td>Select the next or previous star. The selected star has a cyan circle and its
+row is selected in the star table. In a zoomed preview the view moves to the star. Click the preview first, so it
+receives the keys.</td></tr>
+<tr><td>Alt+drag</td><td>Move the selected star. The star follows the cursor and can leave the image; the fit
+starts again when you release the button.</td></tr>
+<tr><td>+ / &minus;</td><td>Make the core radius of the selected star 2% larger or smaller (1 to 500 px). Hold the
+key for a continuous change. The core radius sets the size scale of the star's model and its radii. The circles
+change at once; the fit starts again when you release the key.</td></tr>
+<tr><td>Ctrl+wheel</td><td>The same, 5% for each wheel step. Alt+wheel does not work on all systems, because Qt
+changes it to a horizontal wheel.</td></tr>
+<tr><td>Mouse wheel</td><td>Zoom, up to 8&times;. Zoom out below the fitted view to get space around the image for
+a star outside the frame.</td></tr>
+<tr><td>Drag</td><td>Pan.</td></tr>
+<tr><td>Double-click</td><td>Fit the image in the preview.</td></tr>
+</table>
+<p>The view list also has <i>Removed halo</i>, which shows the subtracted part. <i>Hard stretch</i> shows the faint
+halo and IFN. <i>Radii</i> shows or hides the circles: yellow = protect radius, green = start of the full outer
+reduction, grey = unticked star.</p>
+<p>The preview uses the binned image (section <a href="#__Theory_:_Binning__">6.3</a>), so it is fast. Apply uses
+the full resolution.</p>
+   </div>
+</div>
+
+<div class="pidoc_section" id="__Buttons__">
+   <h3 class="pidoc_sectionTitle">5&emsp;Buttons</h3>
+   <p class="pidoc_sectionToggleButton" onclick="pidoc_toggleSection( 'Buttons', this );">[hide]</p>
+   <div id="Buttons">
+<p><b>New Instance</b> (triangle icon): drag it to the workspace to make a process icon with the current parameters
+and stars, or onto an image to run Dehalo on it without the dialog. Double-click on the icon opens the dialog with
+these parameters.</p>
+<p><b>Documentation</b> (page icon): opens this document.</p>
+<p><b>Reset</b>: sets all parameters to their default values and detects the stars again. Manual stars are removed.
+The target, the exclusion mask and the Invert option do not change.</p>
+<p><b>Apply</b>: makes the result at full resolution (see <a href="#__parameter005__">Apply options</a>).</p>
+<p><b>Close</b>: closes the dialog.</p>
+   </div>
+</div>
+
+<div class="pidoc_section" id="__Theory__">
+   <h3 class="pidoc_sectionTitle">6&emsp;Theory and algorithm</h3>
+   <p class="pidoc_sectionToggleButton" onclick="pidoc_toggleSection( 'Theory', this );">[hide]</p>
+   <div id="Theory">
+<p>This section describes the model of the image, each step of the algorithm and the formulas that the script
+uses. Section <a href="#__Theory_:_Symbols__">6.14</a> lists all symbols and the dialog parameters that set them.</p>
+
+<div class="pidoc_subsection" id="__Theory_:_Physics__">
+   <h4 class="pidoc_subsectionTitle">6.1&emsp;Physical background</h4>
+<p>Far from the core, the PSF wings that section <a href="#__Introduction__">1</a> describes (the aureole [2])
+follow approximately a power law of the radius $r$:</p>
+$$\mathrm{PSF}(r) \propto r^{-a}$$
+<p>King measured a stellar profile over a range of 27 magnitudes and found $a \approx 2$ (an inverse-square law) in
+the outer wings [1]. The slope is different for each telescope, camera and sky, so the script does not assume a
+value: it fits $a$ for each star (sections <a href="#__Theory_:_Tail__">6.8</a> and
+<a href="#__Theory_:_Halo__">6.10</a>).</p>
+<p>Per pixel, the wing has only a very small part of the flux of the star, but it covers a very large area. For a
+star that saturates the sensor, the wing thousands of pixels from the star is still as bright as the outskirts of
+galaxies, tidal tails and IFN. For deep images of faint structures, the wings of bright stars are one of the main
+sources of false light [3, 4].</p>
+<p>Light is additive: the linear image is the sum of the sky background, the objects and the halos. Thus, if we can
+estimate a halo, we can subtract it. After a non-linear stretch (for example the midtones transfer function), this
+is not true: the stretch mixes the halo and the signal, and a subtraction gives wrong results. For this reason the
+script works on linear data only.</p>
+<p>The halo changes with the wavelength. Scattering and the aureole are stronger at short wavelengths, and the
+filters and the coatings change the reflections. For this reason each filter and each RGB channel gets its own
+model.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Model__">
+   <h4 class="pidoc_subsectionTitle">6.2&emsp;Image model</h4>
+<p>The script uses this model for one channel of the linear image $I$ at pixel position $\mathbf{x}$:</p>
+$$I(\mathbf{x}) = S(\mathbf{x}) + P(\mathbf{x}) + \sum_{k=1}^{K} H_k\left(\|\mathbf{x}-\mathbf{c}_k\|\right) + n(\mathbf{x})$$
+<ul>
+<li>$S$: the signal that we keep: stars, galaxies, IFN, tidal tails.</li>
+<li>$P$: a plane that approximates the large-scale background (section <a href="#__Theory_:_Plane__">6.12</a>).</li>
+<li>$H_k$: the halo profile of star $k$ with the centre $\mathbf{c}_k$. It is a function of the distance $r$ only.</li>
+<li>$n$: noise.</li>
+</ul>
+<p>The model has two assumptions:</p>
+<ol>
+<li>Each halo is <b>azimuthally symmetric</b>: it is the same in all directions from the star.</li>
+<li>In each ring around a star, <b>most pixels are background</b>. Objects cover only a small part of the ring. A
+robust statistic (the clipped median) rejects them, or the exclusion mask removes them.</li>
+</ol>
+<p>The script estimates each $H_k$ and calculates the result</p>
+$$\label{output} I_{\mathrm{out}}(\mathbf{x}) = I(\mathbf{x}) - \sum_{k \in \mathcal{E}} w_k(r_k)\, H_k(r_k), \qquad r_k = \|\mathbf{x}-\mathbf{c}_k\|$$
+<p>where $\mathcal{E}$ is the set of ticked stars and $w_k$ is the reduction weight (section
+<a href="#__Theory_:_Reduction__">6.13</a>). The plane $P$ is not subtracted.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Binning__">
+   <h4 class="pidoc_subsectionTitle">6.3&emsp;Binning</h4>
+<p>To make the fit fast, the script bins the image by $B$. For each channel it calculates the mean, and over all
+channels it calculates the maximum:</p>
+$$M(i,j) = \frac{1}{B^2}\sum_{u=0}^{B-1}\sum_{v=0}^{B-1} I(iB+u,\, jB+v)$$
+$$M_{\max}(i,j) = \max_{c,\,u,\,v}\; I_c(iB+u,\, jB+v)$$
+<p>$M$ is used for the fit and for the preview. $M_{\max}$ is used to find saturated pixels. Binning decreases the
+number of pixels by $B^2$ (16 for $B=4$), and it decreases the noise per pixel by $B$. The centre of bin $(i,j)$ is
+at $\left((i+\frac{1}{2})B,\,(j+\frac{1}{2})B\right)$ in full-resolution pixels.</p>
+<p>The halo changes slowly over a distance of $B$ pixels. The mean of a bin is the mean of the halo in the bin, so a
+model that is fitted on $M$ is correct at full resolution without a change of scale. All radii in the script are in
+full-resolution pixels.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Detection__">
+   <h4 class="pidoc_subsectionTitle">6.4&emsp;Star detection</h4>
+<p>The saturated bins are the set $\{(i,j) : M_{\max}(i,j) \ge t_{\mathrm{sat}}\}$. The script finds the connected
+areas of this set with a flood fill (4-connectivity) [12]. An area of $n$ bins has the area $nB^2$ pixels. The core
+radius is the radius of a circle with the same area:</p>
+$$r_{\mathrm{core}} = \sqrt{\frac{n B^2}{\pi}}$$
+<p>The core radius is a measure of the brightness of the star: the brighter the star, the larger the radius where
+the profile goes above the saturation level. Areas with $r_{\mathrm{core}} &lt; r_{\min}$ are rejected. The
+remaining stars are sorted by $r_{\mathrm{core}}$ and the first $N_{\max}$ are kept.</p>
+<p>The centre is the centroid of all saturated full-resolution pixels (all channels) in a square of half size
+$2r_{\mathrm{core}}+16$ around the binned position:</p>
+$$\mathbf{c} = \frac{1}{N}\sum_{I_c(\mathbf{p}) \ge t_{\mathrm{sat}}} \mathbf{p}$$
+<p>A saturated core is flat, so this centroid is the geometric centre of the core. The centre must be precise: an
+error $\delta$ of the centre gives a residual of approximately $\delta \, \frac{dH}{dr}$, which is positive on one
+side of the star and negative on the other side.</p>
+<p>A manual star (Shift+click) has its centre at the click position and its core radius from <i>Shift+click core
+r</i>. To correct a star, select it (Space in the preview or its row in the table), move it with Alt+drag and change
+its core radius with the + and &minus; keys or Ctrl+wheel. This works for detected stars too, for example when a
+stacking artefact or a neighbour star moves the centre of the saturated core. An edited detected star becomes a
+manual star, marked <i>(e)</i>, and keeps its detected position. When the stars are detected again, manual and
+edited stars stay, and detection does not add a star near the detected position of an edited star. To go back to
+the detected values, remove the row and change a detection setting. A manual star that you added does not block
+detection, so a small star next to a bright one does not remove the bright star.</p>
+<p>A star outside the frame can have a halo that reaches into the image. Zoom out below the fitted view, then
+Shift+click at the star's position outside the image, or Alt+drag a star there. Set its core radius so that the
+model has the size of the halo. The profile uses only the pixels in the image; rings without enough pixels are
+not used. A detected star keeps its tick state if a previous
+star is nearer than $3\max(r_{\mathrm{core}})$ of the two stars.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Geometry__">
+   <h4 class="pidoc_subsectionTitle">6.5&emsp;Star geometry</h4>
+<p>The detected star with the largest core is the reference; for an edited star its detected core radius counts.
+Manual stars that you add are not used for the reference, so adding or resizing one does not change the other
+stars. If there is no detected star, the largest manual star is the reference. For each star $s$:</p>
+$$\kappa_s = \frac{r_{\mathrm{core},s}}{\max_{j\,\in\,\mathrm{detected}} r_{\mathrm{core},j}}$$
+$$r_{\mathrm{in},s} = \max\left(f_{\mathrm{in}}\, r_{\mathrm{core},s},\; 2B,\; 8\right)$$
+$$r_{\mathrm{fit},s} = \max\left(R_{\max}\, \kappa_s,\; 20\, r_{\mathrm{in},s}\right)$$
+<p>The profile is measured between $r_{\mathrm{in}}$ and $r_{\mathrm{fit}}$. Inside $r_{\mathrm{in}}$ the pixels
+are saturated or near saturation, where the sensor is not linear, so they are not used.</p>
+<p>Why the radii are proportional to the core radius: if the profile is $A r^{-a}$, the core radius is the radius
+where the profile is equal to $t_{\mathrm{sat}}$, and the halo radius is the radius where the profile is equal to a
+small level $\varepsilon$:</p>
+$$r_{\mathrm{core}} = \left(\frac{A}{t_{\mathrm{sat}}}\right)^{1/a}, \qquad r_{\varepsilon} = \left(\frac{A}{\varepsilon}\right)^{1/a} \quad\Rightarrow\quad \frac{r_{\varepsilon}}{r_{\mathrm{core}}} = \left(\frac{t_{\mathrm{sat}}}{\varepsilon}\right)^{1/a}$$
+<p>The ratio does not depend on the flux $A$. Thus, for stars with the same slope $a$, the halo radius is
+proportional to the core radius. This is an approximation: near the core the real profile is not a pure power
+law.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Exclusion__">
+   <h4 class="pidoc_subsectionTitle">6.6&emsp;Exclusion map</h4>
+<p>A bin is not used in any fit if one of these conditions is true:</p>
+<ul>
+<li>$M_{\max} \ge 0.9\, t_{\mathrm{sat}}$: saturated or almost saturated pixels, where the sensor is not
+linear.</li>
+<li>The exclusion mask is above 0.5 in one or more pixels of the bin. The mask is binned with the maximum, after the
+optional inversion $m \to 1-m$.</li>
+<li>The distance to the centre of a halo star is less than $\max(3 r_{\mathrm{core}},\, r_{\mathrm{in}})$. Thus the
+core of one star does not go into the profile of another star.</li>
+</ul>
+<p>Small stars without saturation are not masked. In each ring they are a small number of high values, and the
+clipped median rejects them.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Profile__">
+   <h4 class="pidoc_subsectionTitle">6.7&emsp;Azimuthal profile</h4>
+<p>The profile is measured in rings with logarithmic spacing:</p>
+$$e_0 = r_{\mathrm{in}}, \qquad e_{b+1} = \max\left(1.035\, e_b,\; e_b + B\right), \qquad \text{until } e_b \ge r_{\mathrm{fit}}$$
+<p>Each ring is 3.5% of its radius wide, and at least one bin wide. Near the star the profile changes quickly, far
+from the star it changes slowly. Equal steps in $\ln\, r$ give the same relative resolution at all radii. The radius
+of ring $b$ is the geometric mean $r_b = \sqrt{e_b\, e_{b+1}}$.</p>
+<p>For star $k$, the values in ring $b$ are the residuals after the plane and the models of all other stars are
+subtracted:</p>
+$$v_p = M_p - P(\mathbf{x}_p) - \sum_{j \ne k} H_j\left(\|\mathbf{x}_p - \mathbf{c}_j\|\right), \qquad e_b \le \|\mathbf{x}_p - \mathbf{c}_k\| < e_{b+1}$$
+<p>Only bins that are not excluded are used. The value of the ring is a <b>sigma-clipped median</b> [6]. The scale
+$\sigma$ comes from the 15.87% and 84.13% quantiles. For a normal distribution these are $\pm 1\sigma$ [7], and they
+do not change much when there are outliers:</p>
+$$\sigma = \frac{1}{2}\left(q_{0.8413} - q_{0.1587}\right)$$
+<p>The script repeats these steps, at most 6 times: calculate the median $m$ and $\sigma$ of the values that are
+kept, then keep only the values in $[m - 2.5\sigma,\; m + 2.5\sigma]$. It stops when no value is removed or when
+fewer than 5 values are left. The values are sorted one time; each clipping step is a window of the sorted values
+that two binary searches find. If a ring has more than 5000 values, the script uses 5000 values at a fixed step.
+A ring with fewer than 30 values is empty.</p>
+<p>The standard error of the median of $n$ values from a normal distribution is [8]:</p>
+$$\varepsilon_b = \sqrt{\frac{\pi}{2}}\;\frac{\sigma_b}{\sqrt{n_b}} \approx 1.2533\,\frac{\sigma_b}{\sqrt{n_b}}$$
+<p>Why the median: stars, galaxies and IFN filaments are positive outliers in a ring. If most of the ring is
+background, the median moves very little. The mean would follow the outliers, and the objects would go into the
+halo model.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Tail__">
+   <h4 class="pidoc_subsectionTitle">6.8&emsp;Local sky offset and tail fit</h4>
+<p>The plane is only an approximation of the background, so near each star a constant offset $s$ can remain. Far
+from the star, a faint halo and a constant offset look almost the same. Thus the script fits both together on the
+outer part of the profile, $r \in [r_{\mathrm{last}}/6,\; r_{\mathrm{last}}]$, where $r_{\mathrm{last}}$ is the
+outermost ring with data:</p>
+$$p(r) = s + A\left(\frac{r}{1000}\right)^{-a}$$
+<p>For a fixed slope $a$ the model is linear in $s$ and $A$. With $x_b = (r_b/1000)^{-a}$, the least-squares
+solution comes from the 2&times;2 normal equations [9]:</p>
+$$A = \frac{n\sum x_b p_b - \sum x_b \sum p_b}{n \sum x_b^2 - \left(\sum x_b\right)^2}, \qquad s = \frac{\sum p_b - A \sum x_b}{n}$$
+<p>The script tries $a = 0.60, 0.62, \ldots, 4.00$ and keeps the solution with $A &gt; 0$ and the smallest sum of
+squared residuals. A grid search is robust: the problem is not linear in $a$, and the residual can have more than one
+minimum. The halo profile is then $h_b = p_b - s$. The reference radius of 1000 px only keeps $A$ in a good
+numeric range.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Smoothing__">
+   <h4 class="pidoc_subsectionTitle">6.9&emsp;Smoothing and noise radius</h4>
+<p>The profile is smoothed with a local linear regression [13] in $u = \ln\, r$. For each ring $b$, a straight
+line is fitted to the rings near it, with Gaussian weights:</p>
+$$\min_{\beta_0,\,\beta_1} \sum_j g_{bj} \left(y_j - \beta_0 - \beta_1 (u_j - u_b)\right)^2, \qquad g_{bj} = \exp\left(-\frac{(u_j-u_b)^2}{2\sigma_u^2}\right), \qquad \sigma_u = \sigma_s \ln\,1.035, \qquad \sigma_s = 1 + 6\lambda$$
+<p>and $\tilde h_b = \beta_0$. The sum is over $|u_j - u_b| \le 3\sigma_u$ and skips empty rings. Where all the rings
+in the window are significant ($h_j &gt; 3\varepsilon_j$), the fit uses $y_j = \ln\, h_j$ and $\tilde h_b = e^{\beta_0}$.
+A power law is a straight line in $(\ln\, r, \ln\, h)$, so it goes through the smoothing without change. In the
+noise, the fit uses $y_j = h_j$, because $\ln\, h$ is not defined for values near 0.</p>
+<p>The window has a fixed width in $\ln\, r$. Near the core the rings are only $B$ pixels wide (section
+<a href="#__Theory_:_Profile__">6.7</a>), so a window with a fixed number of rings would be very wide in
+$\ln\, r$ there. A moving average over such a window makes the steep inner profile flatter: too low near the core
+and too high just outside it. Subtraction of a model that is too high makes a dark ring around the star. The local
+linear fit in $\ln\, r$ does not have this error.</p>
+<p>The smoothed profile is never more than the measured median plus two standard errors, and the rings inside the
+first measured ring get its value:</p>
+$$\tilde h_b \leftarrow \min\left(\tilde h_b,\; h_b + 2\varepsilon_b\right)$$
+<p>The window averages approximately
+$\sqrt{2\pi}\,\sigma_s \approx 2.5\,\sigma_s$ rings, so the noise of the smoothed profile is approximately:</p>
+$$\tilde\varepsilon_b = \frac{\varepsilon_b}{\sqrt{2.5\,\sigma_s}}$$
+<p>The <b>noise radius</b> $r_{\mathrm{cut}}$ is the radius where the profile goes into the noise. Going outward,
+the script looks for 3 rings in sequence with $\tilde h_b &lt; 2\tilde\varepsilon_b$. $r_{\mathrm{cut}}$ is the last
+ring before them with $\tilde h_b \ge 2\tilde\varepsilon_b$ (at least the 4th ring). Beyond $r_{\mathrm{cut}}$ the
+measured profile is only noise, and the model uses the power-law tail (section
+<a href="#__Theory_:_Halo__">6.10</a>). The column <i>Noise r</i> in the star table shows $r_{\mathrm{cut}}$.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Halo__">
+   <h4 class="pidoc_subsectionTitle">6.10&emsp;Halo model</h4>
+<p><b>Tail.</b> A power law is fitted to the smoothed profile on $[r_{\mathrm{cut}}/3,\; r_{\mathrm{cut}}]$, as a
+straight line in log-log space (ordinary least squares on the rings with $\tilde h_b &gt; 0$):</p>
+$$\ln\, \tilde h_b = \ln\, A_t - a_t \ln\, \frac{r_b}{1000}$$
+<p>If there are not sufficient points, the script uses the slope from section
+<a href="#__Theory_:_Tail__">6.8</a>, or $a_t = 2$. The slope is limited to $0.5 \le a_t \le 5$. Then the amplitude
+is set so that the tail continues the profile at $r_{\mathrm{cut}}$ without a step:</p>
+$$A_t = \tilde h(r_{\mathrm{cut}}) \left(\frac{r_{\mathrm{cut}}}{1000}\right)^{a_t}$$
+<p>The column <i>Tail slope</i> in the star table shows $a_t$.</p>
+<p><b>Empirical model</b> (default). Between the rings, the profile is interpolated linearly in $\ln\, r$. Negative
+values are set to 0:</p>
+$$H_{\mathrm{emp}}(r) = \begin{cases} \tilde h_0, & r \le r_0 \\ \tilde h_b + \dfrac{\ln\, (r/r_b)}{\ln\, (r_{b+1}/r_b)}\left(\tilde h_{b+1} - \tilde h_b\right), & r_b < r \le r_{b+1} \le r_{\mathrm{cut}} \\ A_t\left(\dfrac{r}{1000}\right)^{-a_t}, & r > r_{\mathrm{cut}} \end{cases}$$
+<p><b>Smooth power-law model.</b> One power law $A_p r^{-a_p}$ is fitted in log-log space on
+$[r_p,\; r_{\mathrm{cut}}]$, with $r_p = \max(r_{\mathrm{in}},\; \frac{1}{2}\rho R_p)$. The model is never above the
+empirical model:</p>
+$$H_{\mathrm{PL}}(r) = \min\left(H_{\mathrm{emp}}(r),\; A_p\left(\frac{\max(r,\, r_{\mathrm{in}})}{1000}\right)^{-a_p}\right)$$
+<p>A power law that is fitted on the outskirts is too steep near the core. Without the minimum, it would be larger
+than the real halo near the star and the subtraction would make a dark hole.</p>
+<p><b>Taper.</b> Beyond $r_{\mathrm{fit}}$ the model decreases smoothly to zero at $1.5\,r_{\mathrm{fit}}$:</p>
+$$H(r) \leftarrow H(r)\left[1 - \operatorname{smoothstep}\left(\frac{r - r_{\mathrm{fit}}}{0.5\, r_{\mathrm{fit}}}\right)\right], \qquad \operatorname{smoothstep}(t) = 3t^2 - 2t^3, \quad t \text{ clipped to } [0,1]$$
+<p>The derivative of smoothstep [14] is zero at both ends, so the model has no edge in the image.</p>
+<p>The script stores the model in a lookup table with one value for each full-resolution pixel of radius, and
+interpolates linearly between the values. Thus the subtraction at full resolution is fast.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Joint__">
+   <h4 class="pidoc_subsectionTitle">6.11&emsp;Joint fit of all stars</h4>
+<p>Halos overlap. The rings of a faint star near a bright star contain the halo of the bright star. If each star
+were fitted alone, the halo of the bright star would also go into the model of the faint star, and the sum of the
+models would remove too much light. Thus the script fits all stars and the plane together with
+<b>backfitting</b> (block coordinate descent, Gauss-Seidel order) [5, 15]. $T$ is the sum of all halo models on the
+binned grid:</p>
+<pre class="dehalo_algo">T &larr; 0
+P &larr; plane fit of M
+repeat N_it times:
+   for each star k:
+      T &larr; T &minus; H_k                                  remove the model of star k
+      measure the profile of M &minus; P &minus; T around c_k     section 6.7
+      H_k &larr; halo model from the profile                sections 6.8 to 6.10
+      T &larr; T + H_k
+   P &larr; plane fit of M &minus; T                             section 6.12</pre>
+<p>Each step finds the best value of one block (one star or the plane) while all other blocks stay the same. The
+fit of each star sees only the light that the other stars do not explain. For halos that overlap a little or a
+medium amount, 2 to 3 iterations are sufficient. The default is 3.</p>
+<p>Unticked stars are part of $T$. They are fitted, but they are not subtracted from the result. Each channel of an
+RGB image has its own fit.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Plane__">
+   <h4 class="pidoc_subsectionTitle">6.12&emsp;Sky plane</h4>
+$$P(\hat x, \hat y) = \alpha + \beta \hat x + \gamma \hat y, \qquad \hat x = \frac{x}{W} - \frac12, \qquad \hat y = \frac{y}{H} - \frac12$$
+<p>$W$ and $H$ are the image width and height. The normalized coordinates keep the equations well conditioned. The
+plane is fitted on the bins that are not excluded, on the values $v = M - T$:</p>
+<ol>
+<li>Start: $\alpha$ is the clipped median (section <a href="#__Theory_:_Profile__">6.7</a>) of each 7th bin,
+$\beta = \gamma = 0$, and $\sigma$ is its clipped scale.</li>
+<li>Three times: use each 2nd bin in $x$ and $y$; reject bins with $\left|v - P\right| &gt; 3\sigma$; solve the normal
+equations [10], then set $\sigma$ to the RMS of the residuals that are kept:</li>
+</ol>
+$$\left(\sum \mathbf{f}\,\mathbf{f}^{T}\right)\mathbf{\theta} = \sum \mathbf{f}\, v, \qquad \mathbf{f} = (1,\, \hat x,\, \hat y)^{T}, \qquad \mathbf{\theta} = (\alpha,\, \beta,\, \gamma)^{T}$$
+<p>The 3&times;3 system is solved with Gauss-Jordan elimination with partial pivoting [11].</p>
+<p>The plane only helps the fit: without it, a gradient would go into the halo profiles. The plane is <b>not</b>
+subtracted from the result. You must still remove the gradient (DBE, MultiscaleGradientCorrection, GraXpert).
+This is easier after the halos are removed, because a halo is not a smooth gradient.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Reduction__">
+   <h4 class="pidoc_subsectionTitle">6.13&emsp;Reduction weight and output</h4>
+<p>The part of the halo that is removed changes with the distance from the star:</p>
+$$w_k(r) = \alpha_{\mathrm{in}} + \left(\alpha_{\mathrm{out}} - \alpha_{\mathrm{in}}\right)\operatorname{smoothstep}\left(\frac{r - \rho_k R_p}{\rho_k R_t}\right)$$
+<p>For $r \le \rho_k R_p$ the weight is $\alpha_{\mathrm{in}}$. For $r \ge \rho_k (R_p + R_t)$ it is
+$\alpha_{\mathrm{out}}$. Between these radii it changes smoothly. The core protection $c$ and its opacity $p$ multiply the weight by a second factor:</p>
+$$w_k(r) \leftarrow w_k(r)\left[1 - p\left(1 - \operatorname{smoothstep}\left(\frac{r}{c\, r_{\mathrm{core},k}} - 1\right)\right)\right]$$
+<p>With $p = 1$ the factor is 0 for $r \le c\, r_{\mathrm{core},k}$ and 1 for $r \ge 2c\, r_{\mathrm{core},k}$; with
+$p &lt; 1$ it is $1-p$ in the zone. In this zone the result is $I(1 - w_k)$ with $w_k$ increasing outward, so the
+profile of the star falls monotonically and has no step. With the
+default $c = 3$, the protected zone is the zone that the fit excludes (section
+<a href="#__Theory_:_Exclusion__">6.6</a>), where the model has no measurements. The result at full resolution is equation \eqref{output}:
+$I_{\mathrm{out}} = I - \sum_k w_k H_k$, for each channel and each pixel.</p>
+<ul>
+<li>Near the star, $(1-\alpha_{\mathrm{in}})\,H_k$ stays in the image. This is the natural halo that the eye expects
+around a bright star. Low $\alpha_{\mathrm{in}}$ also keeps parts that the azimuthal model cannot describe
+(spikes, ghosts) inside a natural halo.</li>
+<li>Far from the star, where the halo covers faint structures, $\alpha_{\mathrm{out}} = 1$ removes all of the
+model.</li>
+<li>$\alpha_{\mathrm{out}} &gt; 1$ removes more than the model. Use it only if the model is too low; it can make a
+dark ring.</li>
+<li>Inside the first measured ring the model is constant. With $c = 0$ this constant is subtracted from the core and
+the edge of the star; the default core protection prevents this.</li>
+</ul>
+<p>The preview view <i>Removed halo</i> shows $\sum_k w_k H_k$. With <i>Replace target image</i>, $I_{\mathrm{out}}$ is
+written directly into the target (one Script entry in the history) and negative values are set to 0.</p>
+</div>
+
+<div class="pidoc_subsection" id="__Theory_:_Symbols__">
+   <h4 class="pidoc_subsectionTitle">6.14&emsp;Symbols and parameters</h4>
+<table class="pidoc_table dehalo_symbols">
+<tr><th>Symbol</th><th>Meaning</th><th>Dialog parameter / default</th></tr>
+<tr><td>$B$</td><td>binning factor</td><td>Binning, 4</td></tr>
+<tr><td>$t_{\mathrm{sat}}$</td><td>saturation level</td><td>Saturation, 0.95</td></tr>
+<tr><td>$r_{\min}$</td><td>smallest core radius of a halo star</td><td>Min core r, 6 px</td></tr>
+<tr><td>$N_{\max}$</td><td>largest number of detected stars</td><td>Max stars, 8</td></tr>
+<tr><td>$r_{\mathrm{core}}$</td><td>core radius</td><td>table column <i>Core r</i></td></tr>
+<tr><td>$\kappa_s$</td><td>core radius relative to the brightest star</td><td>&ndash;</td></tr>
+<tr><td>$\rho_s$</td><td>radius scale of star $s$</td><td>$\kappa_s$ if Scale radii is on, else 1</td></tr>
+<tr><td>$f_{\mathrm{in}}$</td><td>inner fit radius in units of $r_{\mathrm{core}}$</td><td>Fit inner radius, 2.0</td></tr>
+<tr><td>$R_{\max}$</td><td>fit radius of the brightest star</td><td>Max halo radius, 5000 px</td></tr>
+<tr><td>$r_{\mathrm{fit}}$</td><td>fit radius of a star</td><td>table column <i>Fit r</i></td></tr>
+<tr><td>$\lambda$</td><td>profile smoothing</td><td>Profile smoothing, 0.5</td></tr>
+<tr><td>$N_{\mathrm{it}}$</td><td>joint fit iterations</td><td>Iterations, 3</td></tr>
+<tr><td>$r_{\mathrm{cut}}$</td><td>noise radius</td><td>table column <i>Noise r</i></td></tr>
+<tr><td>$a_t$</td><td>slope of the power-law tail</td><td>table column <i>Tail slope</i></td></tr>
+<tr><td>$\alpha_{\mathrm{out}}$</td><td>reduction far from the star</td><td>Outer reduction, 1.00</td></tr>
+<tr><td>$\alpha_{\mathrm{in}}$</td><td>reduction near the star</td><td>Inner reduction, 0.30</td></tr>
+<tr><td>$c$</td><td>core protection in units of $r_{\mathrm{core}}$</td><td>Core protection, 0</td></tr>
+<tr><td>$p$</td><td>core protection opacity</td><td>Core protection opacity, 0</td></tr>
+<tr><td>$R_p$</td><td>protect radius (brightest star)</td><td>Protect radius, 600 px</td></tr>
+<tr><td>$R_t$</td><td>transition width (brightest star)</td><td>Transition width, 1500 px</td></tr>
+</table>
+</div>
+
+   </div>
+</div>
+
+<div class="pidoc_section" id="__Limits__">
+   <h3 class="pidoc_sectionTitle">7&emsp;Limits</h3>
+   <p class="pidoc_sectionToggleButton" onclick="pidoc_toggleSection( 'Limits', this );">[hide]</p>
+   <div id="Limits">
+<ul>
+<li><b>Azimuthal model only.</b> Diffraction spikes, radial streaks, reflection ghosts that are not centred on the
+star, and halos that are not round (sensor tilt, collimation errors) stay in the image as lobes. Keep
+$\alpha_{\mathrm{in}}$ low, so that they stay inside a natural halo.</li>
+<li><b>Large objects without a mask.</b> If an object covers a large part of a ring, the median includes it, and a
+part of the object goes into the halo model. Use an exclusion mask for the galaxy, tidal tails and bright IFN.</li>
+<li><b>Extrapolation.</b> Beyond $r_{\mathrm{cut}}$ the halo is below the noise of one ring and the model is an
+extrapolated power law. <i>Max halo radius</i> limits how far the extrapolation goes.</li>
+<li><b>Very wide halos and gradients.</b> Far from the star, a very wide halo and a large-scale gradient are
+almost the same. The plane and the offset $s$ take a part of this light, so the far wing can be a little too
+low.</li>
+<li><b>Only stars with a saturated core are detected.</b> Add the other stars with Shift+click. If the master is
+normalized so that saturated stars are below 0.95, decrease <i>Saturation</i>.</li>
+<li><b>Radial streaks and spikes.</b> The model is an azimuthal median. Near a very bright star the halo can be
+made of radial streaks; after the subtraction the streaks stay a little brighter and the gaps between them a little
+darker than the sky. A lower inner reduction keeps these parts inside a natural halo.</li>
+<li><b>Deconvolution after Dehalo.</b> Deconvolution (for example BlurXTerminator) makes any step or dark ring
+around a star stronger. Keep the core protection on when you deconvolve after Dehalo.</li>
+<li><b>Linear, unprocessed data only.</b> Do not use the script after a stretch, and preferably not after
+deconvolution or noise reduction, because these change the profile of the halo.</li>
+</ul>
+   </div>
+</div>
+
+<div class="pidoc_section" id="__References__">
+   <h3 class="pidoc_sectionTitle">8&emsp;References</h3>
+   <p class="pidoc_sectionToggleButton" onclick="pidoc_toggleSection( 'References', this );">[hide]</p>
+   <div id="References">
+<p>The formulas in section <a href="#__Theory__">6</a> are standard statistical and numerical methods. The script
+combines them; they are not taken from one paper. References [1&ndash;4] describe the physics of stellar halos and
+how deep imaging surveys model and remove them. References [5&ndash;15] describe the methods.</p>
+<p><b>Physics of halos and halo removal</b></p>
+<ol>
+<li>King, I. R. (1971). The Profile of a Star Image. <i>PASP</i> 83, 199.<br/><a href="https://doi.org/10.1086/129100" title="https://doi.org/10.1086/129100">https://doi.org/10.1086/129100</a></li>
+<li>Racine, R. (1996). The Telescope Point Spread Function. <i>PASP</i> 108, 699.<br/><a href="https://doi.org/10.1086/133788" title="https://doi.org/10.1086/133788">https://doi.org/10.1086/133788</a></li>
+<li>Slater, C. T., Harding, P., Mihos, J. C. (2009). Removing Internal Reflections from Deep Imaging Data Sets. <i>PASP</i> 121, 1267.<br/><a href="https://doi.org/10.1086/648457" title="https://doi.org/10.1086/648457">https://doi.org/10.1086/648457</a></li>
+<li>Infante-Sainz, R., Trujillo, I., Rom&aacute;n, J. (2020). The Sloan Digital Sky Survey extended point spread functions. <i>MNRAS</i> 491, 5317.<br/><a href="https://doi.org/10.1093/mnras/stz3111" title="https://doi.org/10.1093/mnras/stz3111">https://doi.org/10.1093/mnras/stz3111</a></li>
+<li>Hastie, T., Tibshirani, R. (1990). <i>Generalized Additive Models</i>. Chapman &amp; Hall (reprint Routledge 2017). Backfitting.<br/><a href="https://doi.org/10.1201/9780203753781" title="https://doi.org/10.1201/9780203753781">https://doi.org/10.1201/9780203753781</a></li>
+</ol>
+<p><b>Methods</b></p>
+<ol>
+<li value="6">Sigma clipping: Astropy, <i>astropy.stats.sigma_clip</i>.<br/><a href="https://docs.astropy.org/en/stable/api/astropy.stats.sigma_clip.html" title="https://docs.astropy.org/en/stable/api/astropy.stats.sigma_clip.html">https://docs.astropy.org/en/stable/api/astropy.stats.sigma_clip.html</a></li>
+<li value="7">Quantiles at &plusmn;1&sigma; of the normal distribution: 68&ndash;95&ndash;99.7 rule.<br/><a href="https://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule" title="https://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule">https://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule</a></li>
+<li value="8">Variance of the sample median, &pi;&sigma;&sup2;/(2N): Efficiency (statistics), example &quot;Median&quot;.<br/><a href="https://en.wikipedia.org/wiki/Efficiency_(statistics)" title="https://en.wikipedia.org/wiki/Efficiency_(statistics)">https://en.wikipedia.org/wiki/Efficiency_(statistics)</a></li>
+<li value="9">Least squares for a straight line (closed form of the 2&times;2 normal equations): Simple linear regression.<br/><a href="https://en.wikipedia.org/wiki/Simple_linear_regression" title="https://en.wikipedia.org/wiki/Simple_linear_regression">https://en.wikipedia.org/wiki/Simple_linear_regression</a></li>
+<li value="10">Normal equations: Linear least squares.<br/><a href="https://en.wikipedia.org/wiki/Linear_least_squares" title="https://en.wikipedia.org/wiki/Linear_least_squares">https://en.wikipedia.org/wiki/Linear_least_squares</a></li>
+<li value="11">Gauss-Jordan elimination with partial pivoting: Gaussian elimination.<br/><a href="https://en.wikipedia.org/wiki/Gaussian_elimination" title="https://en.wikipedia.org/wiki/Gaussian_elimination">https://en.wikipedia.org/wiki/Gaussian_elimination</a></li>
+<li value="12">Connected components with a stack: Flood fill.<br/><a href="https://en.wikipedia.org/wiki/Flood_fill" title="https://en.wikipedia.org/wiki/Flood_fill">https://en.wikipedia.org/wiki/Flood_fill</a></li>
+<li value="13">Local linear regression with a Gaussian kernel: Local regression.<br/><a href="https://en.wikipedia.org/wiki/Local_regression" title="https://en.wikipedia.org/wiki/Local_regression">https://en.wikipedia.org/wiki/Local_regression</a></li>
+<li value="14">Smoothstep function 3t&sup2; &minus; 2t&sup3;: Smoothstep.<br/><a href="https://en.wikipedia.org/wiki/Smoothstep" title="https://en.wikipedia.org/wiki/Smoothstep">https://en.wikipedia.org/wiki/Smoothstep</a></li>
+<li value="15">Backfitting algorithm.<br/><a href="https://en.wikipedia.org/wiki/Backfitting_algorithm" title="https://en.wikipedia.org/wiki/Backfitting_algorithm">https://en.wikipedia.org/wiki/Backfitting_algorithm</a></li>
+</ol>
+</div>
+</div>
+
+<div class="pidoc_section" id="__History__">
+   <h3 class="pidoc_sectionTitle">9&emsp;Version history</h3>
+   <p class="pidoc_sectionToggleButton" onclick="pidoc_toggleSection( 'History', this );">[hide]</p>
+   <div id="History">
+<ul>
+<li><b>0.6</b>: select stars with Space in the preview, move a star with Alt+drag and resize it with +/&minus; or Ctrl+wheel; detected stars too; stars outside the
+frame; manual stars do not change the radius scale of the other stars.</li>
+<li><b>0.5</b>: Core protection opacity. Script identifier <code>Dehalo</code>, so the history entry shows the script name. Core protection is off by default.</li>
+<li><b>0.4</b>: no dark rings around stars: profile smoothing by a local power-law fit in log radius, model never
+above the measured profile, new Core protection parameter. Replace writes the target directly with one Dehalo
+(Script) history entry that holds all parameters and stars; the entry or a New Instance icon runs again on other
+images.</li>
+<li><b>0.3</b>: name Dehalo, Replace target image (PixelMath, with history and Undo), Reset and Documentation
+buttons, version header, documentation with the full theory.</li>
+<li><b>0.2</b>: preview in the dialog, automatic detection and fit, Ctrl+click before/after, Shift+click to add
+a star.</li>
+<li><b>0.1</b>: first version.</li>
+</ul>
+   </div>
+</div>
+
+<hr class="separator"/>
+
+<div id="copyright">
+   <p>Copyright &copy; 2026 Michal Wierzbinski</p>
+</div>
+<br/>
+<br/>
+
+</div> <!-- contents -->
+
+</body>
+</html>
