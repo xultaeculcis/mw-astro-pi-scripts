@@ -1,8 +1,9 @@
 # Quick start
 
 This tutorial makes one complete Dehalo run on the luminance master of NGC 3310. Two bright stars are next to the
-galaxy: HD 92095 (the brightest) and a second star to its left in the image. Their halos cover a large part of the field. We
-reduce only these two halos and keep all other stars as they are.
+galaxy: HD 92095 (the brightest) and a second star to its left in the image. Their halos cover a large part of the
+field, six smaller stars add their own halos, and one more bright star is just outside the right edge of the
+frame. We reduce the halos of all eight detected stars and add the star outside the frame by hand.
 
 Data: Dark Matters Astro, PlaneWave CDK14 and Moravian C5A-100M, 0.31"/px, 11405 &times; 8388 px.
 
@@ -32,13 +33,33 @@ The preview (right) shows the image with circles around each halo star:
 
 ## 3. Select the stars
 
-The star table lists the 8 detected stars, largest core first. For this tutorial, untick stars 3 to 8. An unticked
-star stays in the fit, so the models of the other stars still take its light into account, but its own halo is not
-subtracted.
+The star table lists the 8 detected stars, largest core first. For this tutorial, keep all of them ticked.
+
+To keep the halo of a star in the image, untick it. An unticked star stays in the fit, so the models of the other
+stars still take its light into account, but its own halo is not subtracted. Use **Remove selected rows** only for
+false detections.
 
 !!! tip
     To select a star in the preview, move the mouse over the preview and press ++space++. The selected star gets a
     cyan circle and its row is selected in the table.
+
+### Add the star outside the frame
+
+At the top of the right edge, a halo and a horizontal diffraction spike come into the image from a star just
+outside the frame. Detection finds only saturated cores in the image, so this star is not in the table. Add it by
+hand:
+
+1. Set **Shift+click core r** (below the star table) to **15**. This gives the star a size scale between the two
+   brightest stars.
+2. Move the mouse over the preview and zoom out with the mouse wheel until there is space to the right of the image.
+3. ++shift++ + click to the right of the image at **x 11455, y 1148**. The cursor position is shown above the
+   preview, on the right. The new star is marked *(m)* in the table and is selected.
+4. If the position is not exact, move the star with ++alt++ + drag. Change its core radius with ++plus++ /
+   ++minus++.
+
+The position comes from the halo: the halo at the edge is brightest at y = 1148, where the spike enters the image,
+and its decrease into the image puts the centre about 50 px outside the edge. Only the pixels inside the image are
+used for the profile of this star.
 
 ## 4. Set the model
 
@@ -67,7 +88,7 @@ The reduction settings do not start a new fit. The preview changes immediately.
 | Transition width (px) | 2425 | ...over this distance. |
 | Scale radii with star brightness | on | The second star gets smaller radii, in proportion to its core radius. |
 
-![Dialog with the two brightest stars ticked and the final settings](../assets/dehalo/quick-start/dialog_two_stars.jpg)
+![Dialog with all stars ticked, the manual star and the final settings](../assets/dehalo/quick-start/dialog_final.jpg)
 
 ## 6. Check the result in the preview
 

@@ -2,7 +2,7 @@
 
 This page describes every control of the Dehalo dialog, with the default value and when to change it.
 
-![Dehalo dialog](../assets/dehalo/quick-start/dialog_two_stars.jpg)
+![Dehalo dialog](../assets/dehalo/quick-start/dialog_final.jpg)
 
 ## Images
 

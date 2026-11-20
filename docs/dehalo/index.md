@@ -54,7 +54,7 @@ calibration -> integration -> crop -> (gradient correction) -> DEHALO -> deconvo
 | [Preparing images](preparing-images.md) | Gradient correction, RGB composites, background neutralization, linked and unlinked preview stretch. |
 | [Dialog reference](controls.md) | Every control, with typical values. Mouse and keyboard in the preview. |
 | [Troubleshooting](troubleshooting.md) | No stars found, dark rings, too much or too little removed. |
-| [NGC 3310](examples/ngc-3310.md) | Process only the two brightest stars. |
+| [NGC 3310](examples/ngc-3310.md) | Two very bright stars and six smaller ones, a large field-wide halo. |
 | [M99](examples/m99.md) | A master that saturates below 1: set the Saturation. |
 | [NGC 3077](examples/ngc-3077.md) | A small image with small star cores, and a galaxy mask. |
 | [Arp 273](examples/arp-273.md) | A dense star field next to a galaxy pair. |
