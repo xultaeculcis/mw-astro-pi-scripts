@@ -104,8 +104,10 @@ tools do not remove it well, because the halo is a steep radial structure and no
 <p>Dehalo measures the azimuthal profile of each halo star, makes a smooth model of the halo, and subtracts
 a part of this model. The part that is subtracted changes with the distance from the star: near the star a small part
 is removed, so the star keeps a natural halo; far from the star all of the halo is removed.</p>
-<p><b>Use the script on linear data only</b>, before gradient removal, deconvolution and the stretch. The halo
-is additive only in linear data. The halo is not the same in different filters, so use the script on each master (L, R,
+<p><b>Use the script on linear data only</b>, before deconvolution and the stretch. The halo is additive only in
+linear data. A strong gradient can be corrected first with GradientCorrection: its protection of bright structures
+keeps the halos. A gradient tool without such protection can take a part of the halo into its model; then use Dehalo
+before that tool. The halo is not the same in different filters, so use the script on each master (L, R,
 G, B) or on a linear RGB image, where each channel gets its own model.</p>
 <p>Section <a href="#__Theory__">6</a> gives the full model, the algorithms and the formulas.</p>
    </div>

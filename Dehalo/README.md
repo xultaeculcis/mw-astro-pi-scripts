@@ -12,7 +12,8 @@ they cover galaxies, tidal tails and IFN.
 ## Use
 
 1. Open a linear master (L, R, G or B) or a linear RGB and make it the active window. Run the script
-   before gradient removal, BlurXTerminator and the stretch.
+   before BlurXTerminator and the stretch. GradientCorrection (with its default protection) can come
+   first; a gradient tool without protection can take part of the halo, then run Dehalo before it.
 2. The script reads the image, detects stars with saturated cores and fits them on its own. Any change to
    the image, mask, detection or model settings refits after a short pause. The last result stays on
    screen until the new one is ready.

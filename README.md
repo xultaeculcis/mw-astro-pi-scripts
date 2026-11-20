@@ -3,6 +3,8 @@
 PixInsight scripts for astrophotography processing. Each script is in its own folder with a README
 and its documentation.
 
+**Tutorials and examples: https://xultaeculcis.github.io/mw-astro-pi-scripts/**
+
 | Script | Menu | What it does |
 |---|---|---|
 | [Dehalo](Dehalo/) | Script > Utilities > Dehalo | Models the wide halos of bright stars on linear images and subtracts them. |
@@ -24,3 +26,16 @@ and its documentation.
 After a `git pull`, run **Script > Feature Scripts > Regenerate** if a script's menu entry changed.
 
 Tested with PixInsight 1.9.6 on Linux.
+
+## Documentation site
+
+The site is built with MkDocs Material from `docs/` and published to GitHub Pages on each push to `main`.
+Local preview:
+
+```
+uv run --no-project --with "mkdocs<2" --with "mkdocs-material>=9.6,<10" mkdocs serve
+```
+
+## Licence
+
+MIT, see [LICENSE](LICENSE). The example images in `docs/assets` belong to the authors of the data.

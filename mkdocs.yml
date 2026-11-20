@@ -1,0 +1,70 @@
+site_name: mw-astro-pi-scripts
+site_description: PixInsight scripts for astrophotography processing, with tutorials.
+site_url: https://xultaeculcis.github.io/mw-astro-pi-scripts/
+repo_url: https://github.com/xultaeculcis/mw-astro-pi-scripts
+repo_name: xultaeculcis/mw-astro-pi-scripts
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2026 Michal Wierzbinski. Code under the MIT License. Example images &copy; their authors.
+# Raw HTML (the before/after sliders) uses paths relative to the .md file.
+use_directory_urls: false
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.keys
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - https://cdn.jsdelivr.net/npm/img-comparison-slider@8.0.6/dist/styles.css
+  - css/extra.css
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/img-comparison-slider@8.0.6/dist/index.js
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Dehalo:
+      - Overview: dehalo/index.md
+      - Quick start: dehalo/quick-start.md
+      - Preparing images: dehalo/preparing-images.md
+      - Dialog reference: dehalo/controls.md
+      - Troubleshooting: dehalo/troubleshooting.md
+      - Examples:
+          - NGC 3310 (L): dehalo/examples/ngc-3310.md
+          - M99 (L): dehalo/examples/m99.md
+          - NGC 3077 (L): dehalo/examples/ngc-3077.md
+          - Arp 273 (L): dehalo/examples/arp-273.md
+          - RCW 85 (RGB): dehalo/examples/rcw-85.md
+          - Sh2-82 (RGB): dehalo/examples/sh2-82.md

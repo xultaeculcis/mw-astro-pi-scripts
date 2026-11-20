@@ -1,0 +1,11 @@
+/* Before/after slider: full content width, labels in the corners. */
+img-comparison-slider {
+  display: block;
+  width: 100%;
+  margin: 1em 0;
+  --divider-width: 2px;
+  --divider-color: #ffc107;
+  --default-handle-color: #ffc107;
+}
+img-comparison-slider img { display: block; width: 100%; }
+.cmp-labels { display: flex; justify-content: space-between; font-size: 0.75rem; opacity: 0.8; margin-top: -0.6em; }
