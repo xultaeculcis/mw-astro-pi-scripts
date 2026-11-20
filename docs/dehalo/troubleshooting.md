@@ -28,11 +28,22 @@ A stacking artefact, a bloom or a neighbour star merged into the core can move t
 The model removes more than the halo.
 
 - Lower the **Outer reduction** or the **Inner reduction**.
-- In a dense star field, lower **Max halo radius** ([Arp 273](examples/arp-273.md)).
+- In a dense star field, lower **Max halo radius** and the **Outer reduction** (about 0.5)
+  ([Arp 273](examples/arp-273.md)).
 - A galaxy or a nebula inside the halo makes the profile too bright. Use an **Exclusion mask**
   ([Sh2-82](examples/sh2-82.md)).
 - Small stars with a sharp edge: try **Core protection** 2 to 4 with **Core protection opacity** 0.3 to 0.7.
 - Check with **Removed halo** and the **hard stretch** in the preview.
+
+## A dark patch on one side of a star
+
+The halo model is smooth and the same in all directions around the star. It cannot make a dark area on one side of
+the star only. A one-sided patch, dark marks near the core or radial streaks are in the data: usually stacking and
+normalization artifacts near saturated stars, which the halo hid before. Look at the original image with a hard
+STF stretch to see them. Fix them in the integration or with retouching tools; changing the Dehalo settings does not
+remove them. See [NGC 3310](examples/ngc-3310.md).
+
+A dark ring that goes all around the star is different: that is over-subtraction (see above).
 
 ## Too little is removed near the star
 

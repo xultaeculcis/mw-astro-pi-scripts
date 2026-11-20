@@ -95,4 +95,6 @@ to run Dehalo there with the same settings, without the dialog.
 </img-comparison-slider>
 <div class="cmp-labels"><span>Before</span><span>After</span></div>
 
-More images and the second star are on the [NGC 3310 example page](examples/ngc-3310.md).
+The dark patch and the marks near the core of HD 92095 that become visible after Dehalo are most likely stacking
+and normalization artifacts of the master. The bright halo hid them before. See the
+[NGC 3310 example page](examples/ngc-3310.md) for the explanation, more images and the second star.
