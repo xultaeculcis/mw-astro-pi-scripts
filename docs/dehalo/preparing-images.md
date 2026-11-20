@@ -47,9 +47,10 @@ halo model, because the halo is not the same in different filters. The examples 
   <img slot="first" src="../assets/dehalo/prepare/ngc-3310-rgb_raw.jpg" alt="NGC 3310 RGB composite of the masters">
   <img slot="second" src="../assets/dehalo/prepare/ngc-3310-rgb_gc.jpg" alt="NGC 3310 RGB after GradientCorrection and BackgroundNeutralization">
 </img-comparison-slider>
-<div class="cmp-labels"><span>Composite of the masters (unlinked stretch)</span><span>GradientCorrection + BackgroundNeutralization (linked stretch)</span></div>
+<div class="cmp-labels"><span>Composite of the masters</span><span>GradientCorrection + BackgroundNeutralization</span></div>
 
-*NGC 3310, RGB composite. The masters have a red gradient on the right side. Data: Dark Matters Astro.*
+*NGC 3310, RGB composite, the same linked stretch on both sides. Before the preparation, the blue channel has the
+highest background level, so the image is blue. After it, the background is neutral. Data: Dark Matters Astro.*
 
 Colour calibration (for example SPCC) is not necessary before Dehalo. Each channel gets its own halo model, so you
 can calibrate the colour after Dehalo.
@@ -65,7 +66,12 @@ The **Linked** check box above the Dehalo preview selects how a colour image is 
 
 The images below show the same raw composite of NGC 3310 (before BackgroundNeutralization) in the Dehalo preview.
 With a linked stretch, the blue background dominates. After BackgroundNeutralization, the linked stretch looks
-normal; this is how the RGB example images are shown.
+normal.
+
+!!! info "Stretch of the images on this site"
+    All colour images on this site use a **linked** stretch: the same stretch for all channels, so the colour
+    balance of the data is visible. The before and after images of an example always use the same stretch. The only
+    unlinked image is the left image below, which shows what the check box does.
 
 <div class="grid" markdown>
 

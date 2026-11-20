@@ -37,11 +37,16 @@ The model removes more than the halo.
 
 ## A dark patch on one side of a star
 
-The halo model is smooth and the same in all directions around the star. It cannot make a dark area on one side of
-the star only. A one-sided patch, dark marks near the core or radial streaks are in the data: usually stacking and
-normalization artifacts near saturated stars, which the halo hid before. Look at the original image with a hard
-STF stretch to see them. Fix them in the integration or with retouching tools; changing the Dehalo settings does not
-remove them. See [NGC 3310](examples/ngc-3310.md).
+The halo model is smooth and the same in all directions around the star: at each distance it removes the same value
+in every direction. A difference between the directions is therefore in the data before Dehalo, usually stacking
+and normalization artifacts near saturated stars that the halo hid. There are two cases:
+
+- **A patch some distance from the star** (tens to hundreds of pixels): the patch is in the master. Changing the
+  Dehalo settings does not remove it. Fix it in the integration or with retouching tools.
+  See [NGC 3310](examples/ngc-3310.md).
+- **A dark notch at the edge of the core**: the core is not round in the data, and the subtraction near the core
+  pushes its fainter side below the sky. Inside 2 &times; the core radius the model is flat, so with a high inner
+  reduction this happens on small stars. Use **Core protection** 3 with **Core protection opacity** 0.5.
 
 A dark ring that goes all around the star is different: that is over-subtraction (see above).
 

@@ -15,13 +15,9 @@ A very bright star at the top of the field has a large blue-cyan halo that cover
 2. ChannelCombination (RGB) of the three masters.
 3. BackgroundNeutralization (default parameters) on the composite.
 
-See [Preparing images](../preparing-images.md#rgb-composites). The images on this page use a linked stretch.
-
-<img-comparison-slider>
-  <img slot="first" src="../../assets/dehalo/prepare/rcw-85_raw.jpg" alt="RCW 85 composite of the masters">
-  <img slot="second" src="../../assets/dehalo/prepare/rcw-85_gc.jpg" alt="RCW 85 after preparation">
-</img-comparison-slider>
-<div class="cmp-labels"><span>Composite of the masters (unlinked)</span><span>After preparation (linked)</span></div>
+See [Preparing images](../preparing-images.md#rgb-composites). Before BackgroundNeutralization, the blue channel of
+this composite has a much higher background than red and green; with a linked stretch the raw composite is almost
+completely blue. All images on this page use a linked stretch after the preparation.
 
 ## Settings
 
