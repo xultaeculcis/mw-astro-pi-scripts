@@ -785,17 +785,29 @@ function hrStretch(v, c0, m) {
 
 // Bitmap for a view mode. The sky level comes from the fitted plane when
 // available, so before/after share one stretch and the halo is visible.
-function hrRenderBitmap(disp, mode, hard, fits) {
+// linked: one stretch for all channels (mean sky and noise), so the colour
+// balance of the image stays; unlinked: each channel is stretched on its own.
+function hrRenderBitmap(disp, mode, hard, fits, linked) {
    var nc = disp.nc, n = disp.w * disp.h;
    if (!disp.image || disp.image.width != disp.w || disp.image.height != disp.h)
       disp.image = new Image(disp.w, disp.h, nc, nc == 3 ? ColorSpace_RGB : ColorSpace_Gray, 32, SampleType_Real);
-   var out = new Float32Array(n);
+   var out = new Float32Array(n), skies = [], sigs = [], mxs = [];
    for (var c = 0; c < nc; ++c) {
-      var sky = fits ? fits[c].plane.a : disp.stats[c].med, sig = disp.stats[c].sigma;
+      skies.push(fits ? fits[c].plane.a : disp.stats[c].med); sigs.push(disp.stats[c].sigma);
+      var mx = 0, mdl = disp.model ? disp.model[c] : null;
+      if (mode == HR_VIEW_MODEL && mdl) for (var p = 0; p < n; ++p) if (mdl[p] > mx) mx = mdl[p];
+      mxs.push(mx);
+   }
+   if (linked && nc > 1) {
+      var mean = function (a) { return a.reduce(function (x, y) { return x + y; }, 0) / a.length; };
+      var sk = mean(skies), sg = mean(sigs), mm0 = Math.max.apply(null, mxs);
+      for (var c = 0; c < nc; ++c) { skies[c] = sk; sigs[c] = sg; mxs[c] = mm0; }
+   }
+   for (var c = 0; c < nc; ++c) {
+      var sky = skies[c], sig = sigs[c];
       var src = disp.before[c], mdl = disp.model ? disp.model[c] : null;
       if (mode == HR_VIEW_MODEL) {
-         var mx = 0;
-         for (var p = 0; p < n; ++p) if (mdl && mdl[p] > mx) mx = mdl[p];
+         var mx = mxs[c];
          var mm = HR_mtfFor(hard ? 0.5 : 0.3, 30 * sig / Math.max(mx, 1e-12));
          for (var p = 0; p < n; ++p) out[p] = mdl && mx > 0 ? hrStretch(mdl[p] / mx, 0, mm) : 0;
       } else {
@@ -1002,6 +1014,7 @@ function DehaloDialog() {
    this.fits = null;       // per channel fit results
    this.viewMode = HR_VIEW_AFTER;
    this.hardStretch = false;
+   this.linkedStretch = false;
    this.windowTitle = HR_TITLE + " " + HR_VERSION;
    var labelW = this.font.width("Core protection (x core r):M");
 
@@ -1143,6 +1156,10 @@ function DehaloDialog() {
    this.stretchCombo = new ComboBox(this);
    this.stretchCombo.addItem("Normal stretch"); this.stretchCombo.addItem("Hard stretch (faint halo, IFN)");
    this.stretchCombo.onItemSelected = function (i) { self.hardStretch = i == 1; self.renderPreview(false); };
+   this.linkedCheck = new CheckBox(this); this.linkedCheck.text = "Linked";
+   this.linkedCheck.toolTip = "Colour images: one stretch for all channels, so the colour balance of the image stays. " +
+      "Unticked: each channel is stretched on its own (neutral background, like an unlinked STF). Display only.";
+   this.linkedCheck.onCheck = function (c) { self.linkedStretch = c; self.renderPreview(false); };
    this.radiiCheck = new CheckBox(this); this.radiiCheck.text = "Radii"; this.radiiCheck.checked = true;
    this.radiiCheck.toolTip = "Yellow: protect radius. Green: full outer reduction. Grey: unticked star.";
    this.radiiCheck.onCheck = function (c) { self.preview.showRadii = c; self.preview.update(); };
@@ -1219,7 +1236,7 @@ function DehaloDialog() {
    left.add(this.statusLabel); left.add(bRow);
 
    var pBar = new HorizontalSizer; pBar.spacing = 6;
-   pBar.add(this.viewCombo); pBar.add(this.stretchCombo); pBar.add(this.radiiCheck);
+   pBar.add(this.viewCombo); pBar.add(this.stretchCombo); pBar.add(this.linkedCheck); pBar.add(this.radiiCheck);
    pBar.addStretch(); pBar.add(this.cursorLabel);
    var right = new VerticalSizer; right.spacing = 4;
    right.add(pBar); right.add(this.preview, 100);
@@ -1335,7 +1352,7 @@ DehaloDialog.prototype.renderPreview = function (recomputeModel) {
       if (this.fits && (recomputeModel || !this.disp.model)) this.disp.model = hrDisplayModel(this.disp, this.fits, this.stars, this.opts);
       if (!this.fits) this.disp.model = null;
       var mode = this.fits ? this.viewMode : HR_VIEW_BEFORE;
-      var bmp = hrRenderBitmap(this.disp, mode, this.hardStretch, this.fits);
+      var bmp = hrRenderBitmap(this.disp, mode, this.hardStretch, this.fits, this.linkedStretch);
       this.preview.message = this.fits ? ["After", "Before", "Removed halo"][mode] + "   (Ctrl+click: before/after)" :
          "Before (fitting ...)";
       this.preview.setBitmap(bmp, this.disp);
@@ -1492,6 +1509,7 @@ DehaloDialog.prototype.resetDefaults = function () {
    this.addR.setValue(10);
    this.viewMode = HR_VIEW_AFTER; this.viewCombo.currentItem = 0;
    this.hardStretch = false; this.stretchCombo.currentItem = 0;
+   this.linkedStretch = false; this.linkedCheck.checked = false;
    this.radiiCheck.checked = true; this.preview.showRadii = true;
    this.stars = []; this.fits = null; this.pendingDetect = true;
    if (rebin) { this.binned = null; this.disp = null; }

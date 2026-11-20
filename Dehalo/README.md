@@ -29,7 +29,8 @@ they cover galaxies, tidal tails and IFN.
    masters saturate less than L).
 5. The preview (right side) updates live with the reduction sliders. **Ctrl+click** switches between
    before and after. The combo also offers "Removed halo". Normal or hard stretch (for faint halo and
-   IFN). Wheel zooms, drag pans, double-click fits the view. Circles: yellow = protect radius,
+   IFN). **Linked** stretches all colour channels together (keeps the colour balance); unticked, each
+   channel is stretched on its own. Wheel zooms, drag pans, double-click fits the view. Circles: yellow = protect radius,
    green = full outer reduction, grey = unticked star.
 6. **Apply** (bottom left) works at full resolution. With **Replace target image** ticked (default) it
    writes the result into the target. The target gets one Dehalo (Script) history entry with all

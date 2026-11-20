@@ -261,7 +261,9 @@ a star outside the frame.</td></tr>
 <tr><td>Double-click</td><td>Fit the image in the preview.</td></tr>
 </table>
 <p>The view list also has <i>Removed halo</i>, which shows the subtracted part. <i>Hard stretch</i> shows the faint
-halo and IFN. <i>Radii</i> shows or hides the circles: yellow = protect radius, green = start of the full outer
+halo and IFN. <i>Linked</i> (colour images) uses one stretch for all channels, so the colour balance of the image
+stays; unticked, each channel is stretched on its own, which gives a neutral background also before colour
+calibration. The stretch changes only the preview. <i>Radii</i> shows or hides the circles: yellow = protect radius, green = start of the full outer
 reduction, grey = unticked star.</p>
 <p>The preview uses the binned image (section <a href="#__Theory_:_Binning__">6.3</a>), so it is fast. Apply uses
 the full resolution.</p>
@@ -671,7 +673,8 @@ how deep imaging surveys model and remove them. References [5&ndash;15] describe
    <div id="History">
 <ul>
 <li><b>0.6</b>: select stars with Space in the preview, move a star with Alt+drag and resize it with +/&minus; or Ctrl+wheel; detected stars too; stars outside the
-frame; manual stars do not change the radius scale of the other stars.</li>
+frame; manual stars do not change the radius scale of the other stars; linked preview stretch for colour
+images.</li>
 <li><b>0.5</b>: Core protection opacity. Script identifier <code>Dehalo</code>, so the history entry shows the script name. Core protection is off by default.</li>
 <li><b>0.4</b>: no dark rings around stars: profile smoothing by a local power-law fit in log radius, model never
 above the measured profile, new Core protection parameter. Replace writes the target directly with one Dehalo
